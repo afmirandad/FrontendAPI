@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios - Frontend API{% endblock %}
+
+{% block content %}
+<div class="users-container">
+    <div class="users-header">
+        <div class="header-content">
+            <h1>Lista de Usuarios</h1>
+            <p class="user-info">Bienvenido, <strong>Usuario</strong></p>
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout">Cerrar Sesión</a>
+    </div>
+    
+    {% if session.token %}
+    <div class="token-display">
+        <h3><i class="fas fa-key"></i> Tu Token JWT</h3>
+        <div class="token-box">
+            <code id="tokenValue">{{ session.token }}</code>
+            <button onclick="copyToken()" class="btn-copy" title="Copiar token">
+                <i class="fas fa-copy"></i> Copiar
+            </button>
+        </div>
+        <p class="token-info">
+            <i class="fas fa-info-circle"></i> 
+            Este token se utiliza para autenticar las peticiones a la API
+        </p>
+    </div>
+    {% endif %}
+    
+    {% if users %}
+    <div class="users-grid">
+        {% for user in users %}
+        <div class="user-card">
+            <div class="user-avatar">
+                {{ user.username[0].upper() if user.username else 'U' }}
+            </div>
+            <div class="user-info-card">
+                <h3>{{ user.username or 'Sin nombre' }}</h3>
+                {% if user.id %}
+                <p class="user-id">ID: {{ user.id }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h2>No hay usuarios disponibles</h2>
+        <p>Parece que no se pudieron cargar los usuarios en este momento.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Copy token to clipboard
+    function copyToken() {
+        const tokenValue = document.getElementById('tokenValue').textContent;
+        navigator.clipboard.writeText(tokenValue).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+            btn.style.backgroundColor = '#10b981';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.backgroundColor = '';
+            }, 2000);
+        }).catch(err => {
+            alert('Error al copiar el token');
+        });
+    }
+    
+    // Add animation to user cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.user-card').forEach(card => {
+        observer.observe(card);
+    });
+</script>
+{% endblock %}
