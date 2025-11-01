@@ -10,6 +10,9 @@
             <p class="user-info">Gestión de productos</p>
         </div>
         <div class="header-actions">
+            <button class="btn btn-add" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Agregar Nuevo
+            </button>
             <a href="{{ url_for('users') }}" class="btn btn-secondary">
                 <i class="fas fa-users"></i> Usuarios
             </a>
@@ -100,7 +103,13 @@
             
             <div class="card-footer">
                 <button class="btn btn-view" onclick="viewDetails({{ item.id }})">
-                    <i class="fas fa-eye"></i> Ver Detalles
+                    <i class="fas fa-eye"></i> Ver
+                </button>
+                <button class="btn btn-edit" onclick="openEditModal({{ item.id }})">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn btn-delete" onclick="confirmDelete({{ item.id }}, '{{ item.marca }} {{ item.modelo }}')">
+                    <i class="fas fa-trash"></i> Eliminar
                 </button>
             </div>
         </div>
@@ -131,6 +140,111 @@
         <div class="modal-footer">
             <button class="btn btn-primary" onclick="closeModal()">
                 <i class="fas fa-check"></i> Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar -->
+<div id="formModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="formModalTitle"><i class="fas fa-plus"></i> Agregar Electrodoméstico</h2>
+            <span class="close-modal" onclick="closeFormModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="electrodomesticoForm" onsubmit="submitForm(event)">
+                <input type="hidden" id="electrodomesticoId" value="">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="marca"><i class="fas fa-building"></i> Marca *</label>
+                        <input type="text" id="marca" name="marca" required placeholder="Ej: Samsung">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modelo"><i class="fas fa-barcode"></i> Modelo *</label>
+                        <input type="text" id="modelo" name="modelo" required placeholder="Ej: RF28R7351SG">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo"><i class="fas fa-tag"></i> Tipo *</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Nevera">Nevera</option>
+                            <option value="Lavadora">Lavadora</option>
+                            <option value="Lavavajillas">Lavavajillas</option>
+                            <option value="Horno">Horno</option>
+                            <option value="Microondas">Microondas</option>
+                            <option value="Secadora">Secadora</option>
+                            <option value="Aspiradora">Aspiradora</option>
+                            <option value="Licuadora">Licuadora</option>
+                            <option value="Batidora">Batidora</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="precio"><i class="fas fa-dollar-sign"></i> Precio *</label>
+                        <input type="number" id="precio" name="precio" step="0.01" min="0" required placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clase_energetica"><i class="fas fa-leaf"></i> Clase Energética</label>
+                        <select id="clase_energetica" name="clase_energetica">
+                            <option value="">Seleccionar...</option>
+                            <option value="A+++">A+++</option>
+                            <option value="A++">A++</option>
+                            <option value="A+">A+</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="en_stock"><i class="fas fa-warehouse"></i> Estado</label>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="en_stock" name="en_stock" checked>
+                            <label for="en_stock" class="checkbox-label">Disponible en stock</label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeFormModal()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" form="electrodomesticoForm" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content modal-small">
+        <div class="modal-header modal-header-danger">
+            <h2><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h2>
+            <span class="close-modal" onclick="closeDeleteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="deleteMessage">¿Estás seguro de que deseas eliminar este electrodoméstico?</p>
+            <p class="warning-text"><i class="fas fa-info-circle"></i> Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                <i class="fas fa-trash"></i> Eliminar
             </button>
         </div>
     </div>
@@ -169,6 +283,84 @@
 .btn-secondary:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4);
 }
 
 .stats-container {
@@ -338,15 +530,17 @@
     padding: 1rem 1.5rem;
     background: #f9fafb;
     border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 0.5rem;
 }
 
 .btn-view {
-    width: 100%;
-    padding: 0.75rem;
+    flex: 1;
+    padding: 0.6rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -354,6 +548,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    font-size: 0.85rem;
 }
 
 .btn-view:hover {
@@ -578,6 +773,136 @@
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Form styles */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.form-group select option {
+    background: #1e293b;
+    color: white;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+}
+
+.modal-small {
+    max-width: 450px;
+}
+
+.modal-header-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.warning-text {
+    color: #fbbf24;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: -400px;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 3000;
+    transition: right 0.3s ease;
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.notification.show {
+    right: 20px;
+}
+
+.notification-success {
+    border-left: 4px solid #10b981;
+    color: #065f46;
+}
+
+.notification-success i {
+    color: #10b981;
+    font-size: 1.5rem;
+}
+
+.notification-error {
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+}
+
+.notification-error i {
+    color: #ef4444;
+    font-size: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -746,6 +1071,203 @@
     
     document.querySelectorAll('.electrodomestico-card').forEach(card => {
         observer.observe(card);
+    });
+    
+    // ==================== FUNCIONES DE FORMULARIO ====================
+    
+    function openAddModal() {
+        document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-plus"></i> Agregar Electrodoméstico';
+        document.getElementById('electrodomesticoId').value = '';
+        document.getElementById('electrodomesticoForm').reset();
+        document.getElementById('en_stock').checked = true;
+        document.getElementById('formModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function openEditModal(id) {
+        const item = electrodomesticos.find(e => e.id === id);
+        if (!item) {
+            alert('No se encontró el electrodoméstico');
+            return;
+        }
+        
+        document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Electrodoméstico';
+        document.getElementById('electrodomesticoId').value = item.id;
+        document.getElementById('marca').value = item.marca;
+        document.getElementById('modelo').value = item.modelo;
+        document.getElementById('tipo').value = item.tipo;
+        document.getElementById('precio').value = item.precio;
+        document.getElementById('clase_energetica').value = item.clase_energetica || '';
+        document.getElementById('en_stock').checked = item.en_stock;
+        
+        document.getElementById('formModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeFormModal() {
+        document.getElementById('formModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        document.getElementById('electrodomesticoForm').reset();
+    }
+    
+    async function submitForm(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('electrodomesticoId').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        
+        const formData = {
+            marca: document.getElementById('marca').value,
+            modelo: document.getElementById('modelo').value,
+            tipo: document.getElementById('tipo').value,
+            precio: parseFloat(document.getElementById('precio').value),
+            clase_energetica: document.getElementById('clase_energetica').value || null,
+            en_stock: document.getElementById('en_stock').checked
+        };
+        
+        try {
+            let response;
+            if (id) {
+                // Update
+                response = await fetch(`/electrodomesticos/update/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+            } else {
+                // Create
+                response = await fetch('/electrodomesticos/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                closeFormModal();
+                showNotification(result.message, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showNotification(result.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Error al procesar la solicitud', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+    
+    // ==================== FUNCIONES DE ELIMINACIÓN ====================
+    
+    let deleteId = null;
+    
+    function confirmDelete(id, name) {
+        deleteId = id;
+        document.getElementById('deleteMessage').innerHTML = 
+            `¿Estás seguro de que deseas eliminar <strong>${name}</strong>?`;
+        document.getElementById('deleteModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        // Set up delete confirmation
+        document.getElementById('confirmDeleteBtn').onclick = () => deleteElectrodomestico(id);
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        deleteId = null;
+    }
+    
+    async function deleteElectrodomestico(id) {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const originalText = confirmBtn.innerHTML;
+        
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+        
+        try {
+            const response = await fetch(`/electrodomesticos/delete/${id}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                closeDeleteModal();
+                showNotification(result.message, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showNotification(result.message, 'error');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Error al eliminar el electrodoméstico', 'error');
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+        }
+    }
+    
+    // ==================== NOTIFICACIONES ====================
+    
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            ${message}
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
+    
+    // ==================== CERRAR MODALES CON ESC ====================
+    
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+            closeFormModal();
+            closeDeleteModal();
+        }
+    });
+    
+    // Cerrar modales al hacer clic fuera
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            closeModal();
+            closeFormModal();
+            closeDeleteModal();
+        }
     });
 </script>
 {% endblock %}

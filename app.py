@@ -301,6 +301,100 @@ def electrodomesticos():
         return render_template('electrodomesticos.html', electrodomesticos=[])
 
 
+@app.route('/electrodomesticos/create', methods=['POST'])
+@login_required
+def create_electrodomestico():
+    """Create a new electrodomestico."""
+    try:
+        token = session.get('token')
+        if not token:
+            return jsonify({'success': False, 'message': 'Sesión expirada'}), 401
+        
+        data = request.get_json()
+        headers = {'Authorization': f'Bearer {token}'}
+        
+        response = requests.post(
+            f'{API_BASE_URL}/electrodomesticos/',
+            headers=headers,
+            json=data,
+            timeout=10
+        )
+        
+        if response.status_code == 201:
+            app.logger.info(f'Electrodomestico created successfully')
+            return jsonify({'success': True, 'message': 'Electrodoméstico creado exitosamente', 'data': response.json()})
+        else:
+            error_msg = response.json().get('mensaje', 'Error al crear el electrodoméstico')
+            app.logger.error(f'Error creating electrodomestico: {error_msg}')
+            return jsonify({'success': False, 'message': error_msg}), response.status_code
+            
+    except Exception as e:
+        app.logger.error(f'Error in create_electrodomestico: {str(e)}')
+        return jsonify({'success': False, 'message': 'Error al crear el electrodoméstico'}), 500
+
+
+@app.route('/electrodomesticos/update/<int:id>', methods=['PUT'])
+@login_required
+def update_electrodomestico(id):
+    """Update an electrodomestico."""
+    try:
+        token = session.get('token')
+        if not token:
+            return jsonify({'success': False, 'message': 'Sesión expirada'}), 401
+        
+        data = request.get_json()
+        headers = {'Authorization': f'Bearer {token}'}
+        
+        response = requests.put(
+            f'{API_BASE_URL}/electrodomesticos/{id}',
+            headers=headers,
+            json=data,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            app.logger.info(f'Electrodomestico {id} updated successfully')
+            return jsonify({'success': True, 'message': 'Electrodoméstico actualizado exitosamente', 'data': response.json()})
+        else:
+            error_msg = response.json().get('mensaje', 'Error al actualizar el electrodoméstico')
+            app.logger.error(f'Error updating electrodomestico {id}: {error_msg}')
+            return jsonify({'success': False, 'message': error_msg}), response.status_code
+            
+    except Exception as e:
+        app.logger.error(f'Error in update_electrodomestico: {str(e)}')
+        return jsonify({'success': False, 'message': 'Error al actualizar el electrodoméstico'}), 500
+
+
+@app.route('/electrodomesticos/delete/<int:id>', methods=['DELETE'])
+@login_required
+def delete_electrodomestico(id):
+    """Delete an electrodomestico."""
+    try:
+        token = session.get('token')
+        if not token:
+            return jsonify({'success': False, 'message': 'Sesión expirada'}), 401
+        
+        headers = {'Authorization': f'Bearer {token}'}
+        
+        response = requests.delete(
+            f'{API_BASE_URL}/electrodomesticos/{id}',
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            app.logger.info(f'Electrodomestico {id} deleted successfully')
+            return jsonify({'success': True, 'message': 'Electrodoméstico eliminado exitosamente'})
+        else:
+            error_msg = response.json().get('mensaje', 'Error al eliminar el electrodoméstico')
+            app.logger.error(f'Error deleting electrodomestico {id}: {error_msg}')
+            return jsonify({'success': False, 'message': error_msg}), response.status_code
+            
+    except Exception as e:
+        app.logger.error(f'Error in delete_electrodomestico: {str(e)}')
+        return jsonify({'success': False, 'message': 'Error al eliminar el electrodoméstico'}), 500
+
+
 @app.route('/debug/session')
 def debug_session():
     """Debug endpoint to check session contents."""
