@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}Electrodomésticos - Frontend API{% endblock %}
+
+{% block content %}
+<div class="users-container">
+    <div class="users-header">
+        <div class="header-content">
+            <h1><i class="fas fa-blender"></i> Catálogo de Electrodomésticos</h1>
+            <p class="user-info">Gestión de productos</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('users') }}" class="btn btn-secondary">
+                <i class="fas fa-users"></i> Usuarios
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+    
+    {% if electrodomesticos %}
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+                <h3>{{ electrodomesticos|length }}</h3>
+                <p>Total Productos</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <h3>{{ electrodomesticos|selectattr('en_stock')|list|length }}</h3>
+                <p>En Stock</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">❌</div>
+            <div class="stat-info">
+                <h3>{{ electrodomesticos|rejectattr('en_stock')|list|length }}</h3>
+                <p>Sin Stock</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="electrodomesticos-grid">
+        {% for item in electrodomesticos %}
+        <div class="electrodomestico-card {% if not item.en_stock %}out-of-stock{% endif %}">
+            <div class="card-header">
+                <div class="card-icon">
+                    {% if item.tipo == 'Nevera' %}
+                        🧊
+                    {% elif item.tipo == 'Lavadora' %}
+                        🌀
+                    {% elif item.tipo == 'Microondas' %}
+                        📻
+                    {% elif item.tipo == 'Horno' %}
+                        🔥
+                    {% elif item.tipo == 'Aspiradora' %}
+                        🌪️
+                    {% elif item.tipo == 'Licuadora' or item.tipo == 'Batidora' %}
+                        🍹
+                    {% else %}
+                        ⚡
+                    {% endif %}
+                </div>
+                <div class="card-badges">
+                    {% if item.clase_energetica %}
+                    <span class="badge badge-energy">{{ item.clase_energetica }}</span>
+                    {% endif %}
+                    {% if item.en_stock %}
+                    <span class="badge badge-stock">En Stock</span>
+                    {% else %}
+                    <span class="badge badge-no-stock">Agotado</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <h3 class="item-title">{{ item.marca }}</h3>
+                <p class="item-model">{{ item.modelo }}</p>
+                <div class="item-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="fas fa-tag"></i> Tipo:</span>
+                        <span class="detail-value">{{ item.tipo }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="fas fa-dollar-sign"></i> Precio:</span>
+                        <span class="detail-value price">${{ "%.2f"|format(item.precio) }}</span>
+                    </div>
+                    {% if item.id %}
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="fas fa-hashtag"></i> ID:</span>
+                        <span class="detail-value">{{ item.id }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <button class="btn btn-view" onclick="viewDetails({{ item.id }})">
+                    <i class="fas fa-eye"></i> Ver Detalles
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🏠</div>
+        <h2>No hay electrodomésticos disponibles</h2>
+        <p>Parece que no se pudieron cargar los electrodomésticos en este momento.</p>
+        <button class="btn btn-primary" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Recargar
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-info h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: #333;
+}
+
+.stat-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.electrodomesticos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.electrodomestico-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.electrodomestico-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.electrodomestico-card.out-of-stock {
+    opacity: 0.7;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-icon {
+    font-size: 3rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.card-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-energy {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.badge-stock {
+    background: #10b981;
+    color: white;
+}
+
+.badge-no-stock {
+    background: #ef4444;
+    color: white;
+}
+
+.card-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.item-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: #1f2937;
+}
+
+.item-model {
+    color: #6b7280;
+    margin: 0 0 1rem 0;
+    font-size: 0.95rem;
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.detail-value.price {
+    font-size: 1.25rem;
+    color: #10b981;
+}
+
+.card-footer {
+    padding: 1rem 1.5rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-view {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-view:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+@media (max-width: 768px) {
+    .electrodomesticos-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .users-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function viewDetails(id) {
+        alert(`Mostrando detalles del electrodoméstico ID: ${id}\n\nEsta funcionalidad puede expandirse para mostrar un modal con información detallada.`);
+    }
+    
+    // Add animation to cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '0';
+                entry.target.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    entry.target.style.transition = 'all 0.5s ease';
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.electrodomestico-card').forEach(card => {
+        observer.observe(card);
+    });
+</script>
+{% endblock %}

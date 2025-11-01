@@ -234,6 +234,73 @@ def users():
         return render_template('users.html', users=[])
 
 
+@app.route('/electrodomesticos')
+@login_required
+def electrodomesticos():
+    """Display electrodomesticos page with appliances list from API."""
+    app.logger.info('Electrodomesticos page accessed')
+    
+    try:
+        # Get authorization token from session
+        token = session.get('token')
+        
+        if not token:
+            app.logger.warning('No token found in session, redirecting to login')
+            flash('Tu sesión ha expirado. Por favor inicia sesión de nuevo.', 'warning')
+            return redirect(url_for('login'))
+        
+        headers = {'Authorization': f'Bearer {token}'}
+        
+        # Make request to API to get electrodomesticos
+        response = requests.get(
+            f'{API_BASE_URL}/electrodomesticos/',
+            headers=headers,
+            timeout=10
+        )
+        
+        app.logger.info(f'API Response status: {response.status_code}')
+        app.logger.info(f'API Response body: {response.text[:200]}...')
+        
+        if response.status_code == 200:
+            raw_electrodomesticos = response.json()
+            app.logger.info(f'Raw API response: {raw_electrodomesticos}')
+            
+            # Process and format electrodomesticos data
+            electrodomesticos_data = []
+            for item in raw_electrodomesticos:
+                formatted_item = {
+                    "id": item.get("id"),
+                    "marca": item.get("marca"),
+                    "modelo": item.get("modelo"),
+                    "tipo": item.get("tipo"),
+                    "precio": item.get("precio"),
+                    "clase_energetica": item.get("clase_energetica"),
+                    "en_stock": item.get("en_stock", False)
+                }
+                electrodomesticos_data.append(formatted_item)
+            
+            app.logger.info(f'Successfully retrieved and formatted {len(electrodomesticos_data)} electrodomesticos')
+            return render_template('electrodomesticos.html', electrodomesticos=electrodomesticos_data)
+        elif response.status_code == 401:
+            app.logger.warning('Token expired or invalid, redirecting to login')
+            session.clear()
+            flash('Tu sesión ha expirado. Por favor inicia sesión de nuevo.', 'warning')
+            return redirect(url_for('login'))
+        else:
+            app.logger.error(f'API error when fetching electrodomesticos: {response.status_code}')
+            flash('Error al cargar los electrodomésticos. Por favor intenta de nuevo.', 'error')
+            return render_template('electrodomesticos.html', electrodomesticos=[])
+            
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f'API request error when fetching electrodomesticos: {str(e)}')
+        flash('Error al conectar con el servidor. Por favor intenta de nuevo.', 'error')
+        return render_template('electrodomesticos.html', electrodomesticos=[])
+    except Exception as e:
+        app.logger.error(f'Unexpected error when fetching electrodomesticos: {str(e)}')
+        flash('Error inesperado. Por favor intenta de nuevo.', 'error')
+        return render_template('electrodomesticos.html', electrodomesticos=[])
+
+
 @app.route('/debug/session')
 def debug_session():
     """Debug endpoint to check session contents."""
