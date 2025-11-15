@@ -193,7 +193,7 @@ def users():
             headers=headers,
             timeout=10
         )
-        app.logger.info(f'Full API response: {'curl -i {API_BASE_URL}/users/ -H "Authorization: Bearer {token}"'}')
+        app.logger.info(f'Full API response: curl -i {API_BASE_URL}/users/ -H "Authorization: Bearer {token}"')
 
         app.logger.info(f'API Response status: {response.status_code}')
         app.logger.info(f'API Response body: {response.text[:200]}...')
